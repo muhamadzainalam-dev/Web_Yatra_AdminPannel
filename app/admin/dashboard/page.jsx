@@ -7,9 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 
-export default function AdminDashboard() {
+export default function Page() {
   const router = useRouter();
+  const [videoData, setVideoData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    videopath: "",
+    thumbnailPath: "",
+  });
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -21,6 +29,35 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     router.push("/admin/login");
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setVideoData({ ...videoData, [id]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("/api/storeCourseInfo", videoData);
+
+      if (response.status === 200) {
+        alert(response.data.message || "Video uploaded successfully!");
+        setVideoData({
+          title: "",
+          description: "",
+          category: "",
+          videopath: "",
+          thumbnailPath: "",
+        });
+      } else {
+        throw new Error(response.data.message || "Unknown error occurred");
+      }
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      alert("Failed to upload video. Please try again.");
+    }
   };
 
   return (
@@ -72,24 +109,27 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="videoPath">Video Path</Label>
+                  <Label htmlFor="videopath">Video Path</Label>
                   <Input
-                    id="videoPath"
+                    id="videopath"
                     type="text"
                     placeholder="Enter video path"
-                    value={videoData.videoPath}
+                    value={videoData.videopath}
                     onChange={handleInputChange}
                   />
                 </div>
-                {/* <div className="space-y-2">
-                  <Label htmlFor="thumbnailPath">Choose Thumbnail</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="thumbnailPath">
+                    Thumbnail Path (Optional)
+                  </Label>
                   <Input
                     id="thumbnailPath"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
+                    type="text"
+                    placeholder="Enter thumbnail path"
+                    value={videoData.thumbnailPath}
+                    onChange={handleInputChange}
                   />
-                </div> */}
+                </div>
                 <Button type="submit">Upload Video</Button>
               </form>
             </CardContent>

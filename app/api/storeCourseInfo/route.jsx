@@ -1,5 +1,4 @@
 import { MongoClient } from "mongodb";
-import { NextResponse } from "next/server";
 
 const MONGODB_URI =
   "mongodb+srv://Web_Yatra_Admin:Webyatra-0312@webyatra.gpkb7.mongodb.net/?retryWrites=true&w=majority&appName=WebYatra";
@@ -23,24 +22,29 @@ async function connectToDatabase() {
   return { client, db };
 }
 
-export async function POST(request) {
-  const body = await request.json();
-
-  const { title, description, category, videoPath } = req.body;
-
+export async function POST(req) {
   try {
-    const { db } = await connectToDatabase();
-    await db.collection(COLLECTION_NAME).insertOne({
-      title,
-      description,
-      category,
-      videoPath,
-    });
-    return res.status(201).json({ message: "Video uploaded successfully" });
-  } catch (error) {
-    console.error("Database error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
+    const videoData = await req.json();
+    const { client, db } = await connectToDatabase();
+    const collection = db.collection(COLLECTION_NAME);
 
-  return NextResponse.json({ message: "Video uploaded successfully" });
+    const result = await collection.insertOne(videoData);
+
+    return new Response(
+      JSON.stringify({
+        message: "Video uploaded successfully",
+        insertedId: result.insertedId,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Error inserting video data:", error);
+    return new Response(JSON.stringify({ message: "Failed to upload video" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
