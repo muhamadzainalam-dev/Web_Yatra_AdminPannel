@@ -7,17 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function AdminDashboard() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [courses, setCourses] = useState([]);
+  const [videoData, setVideoData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    videoPath: "",
+    thumbnailPath: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -25,18 +23,52 @@ export default function AdminDashboard() {
     if (!isLoggedIn) {
       router.push("/admin/login");
     }
-    // In a real application, you'd fetch the courses from an API here
-    setCourses([
-      { id: 1, title: "Introduction to React" },
-      { id: 2, title: "Advanced JavaScript" },
-      { id: 3, title: "Node.js Fundamentals" },
-    ]);
   }, [router]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setVideoData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const { id } = e.target;
+    const file = e.target.files[0];
+    if (file) {
+      setVideoData((prevData) => ({
+        ...prevData,
+        [id]: file.name, // Store the file name for now; in a real app, you'd upload the file and store its URL
+      }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real application, you'd implement the search functionality here
-    console.log("Searching for:", searchTerm);
+    try {
+      const response = await fetch("/api/storeproduct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(setVideoData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("Video uploaded successfully!");
+        setVideoData({
+          title: "",
+          description: "",
+          category: "",
+          videoPath: "",
+        });
+      } else {
+        alert(`Error: ${result.error || "Failed to upload video"}`);
+      }
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      alert("An error occurred while uploading the video.");
+    }
   };
 
   const handleLogout = () => {
@@ -53,8 +85,6 @@ export default function AdminDashboard() {
       <Tabs defaultValue="upload-video" className="space-y-4 px-8 my-5">
         <TabsList className="flex w-[400px] mx-auto">
           <TabsTrigger value="upload-video">Upload Video</TabsTrigger>
-          <TabsTrigger value="upload-playlist">Upload Playlist</TabsTrigger>
-          <TabsTrigger value="search-courses">Search Courses</TabsTrigger>
         </TabsList>
         <TabsContent value="upload-video">
           <Card>
@@ -62,106 +92,59 @@ export default function AdminDashboard() {
               <CardTitle>Upload New Course Video</CardTitle>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="video-title">Video Title</Label>
+                  <Label htmlFor="title">Video Title</Label>
                   <Input
-                    id="video-title"
+                    id="title"
                     type="text"
                     placeholder="Enter video title"
+                    value={videoData.title}
+                    onChange={handleInputChange}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="playlist-description">
-                    Playlist Description
-                  </Label>
+                  <Label htmlFor="description">Video Description</Label>
                   <textarea
-                    id="playlist-description"
+                    id="description"
                     className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
                     rows={4}
-                    placeholder="Enter playlist description"
+                    placeholder="Enter video description"
+                    value={videoData.description}
+                    onChange={handleInputChange}
                   ></textarea>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="video-title">Video Cartegory</Label>
+                  <Label htmlFor="category">Video Category</Label>
                   <Input
-                    id="video-title"
+                    id="category"
                     type="text"
-                    placeholder="Enter video title"
+                    placeholder="Enter video category"
+                    value={videoData.category}
+                    onChange={handleInputChange}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="video-file">Video Path</Label>
+                  <Label htmlFor="videoPath">Video Path</Label>
                   <Input
-                    id="thumbnail-path"
+                    id="videoPath"
                     type="text"
-                    placeholder="Enter thumbnail image path"
+                    placeholder="Enter video path"
+                    value={videoData.videoPath}
+                    onChange={handleInputChange}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="thumbnail-path">Chose Thumbnail</Label>
-                  <Input id="video-file" type="file" accept="image/*" />
-                </div>
+                {/* <div className="space-y-2">
+                  <Label htmlFor="thumbnailPath">Choose Thumbnail</Label>
+                  <Input
+                    id="thumbnailPath"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                </div> */}
                 <Button type="submit">Upload Video</Button>
               </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="upload-playlist">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload New Playlist</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="playlist-title">Playlist Title</Label>
-                  <Input
-                    id="playlist-title"
-                    type="text"
-                    placeholder="Enter playlist title"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="playlist-image">Playlist Image</Label>
-                  <Input id="playlist-image" type="file" accept="image/*" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="playlist-description">
-                    Playlist Description
-                  </Label>
-                  <textarea
-                    id="playlist-description"
-                    className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                    rows={4}
-                    placeholder="Enter playlist description"
-                  ></textarea>
-                </div>
-                <Button type="submit">Create Playlist</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="search-courses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Courses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSearch} className="space-y-4">
-                <Input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Button type="submit">Search</Button>
-              </form>
-              <ul className="mt-4 space-y-2">
-                {courses.map((course: any) => (
-                  <li key={course.id}>{course.title}</li>
-                ))}
-              </ul>
             </CardContent>
           </Card>
         </TabsContent>

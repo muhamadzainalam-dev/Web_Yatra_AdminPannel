@@ -1,11 +1,10 @@
-// app/api/storeproduct/route.js
-import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { NextResponse } from "next/server";
 
 const MONGODB_URI =
-  "mongodb+srv://Muhammad_Zain:Zain-03120014927@first-cluster.fqodd.mongodb.net/?retryWrites=true&w=majority&appName=first-cluster";
-const MONGODB_DB = "Token_Poduct_Testing";
-const COLLECTION_NAME = "Token_Poduct_Testing";
+  "mongodb+srv://Web_Yatra_Admin:Webyatra-0312@webyatra.gpkb7.mongodb.net/?retryWrites=true&w=majority&appName=WebYatra";
+const MONGODB_DB = "WebYatra";
+const COLLECTION_NAME = "Course_Info";
 
 let cachedClient = null;
 let cachedDb = null;
@@ -25,22 +24,23 @@ async function connectToDatabase() {
 }
 
 export async function POST(request) {
+  const body = await request.json();
+
+  const { title, description, category, videoPath } = req.body;
+
   try {
-    const data = await request.json();
     const { db } = await connectToDatabase();
-    const collection = db.collection(COLLECTION_NAME);
-
-    const result = await collection.insertOne(data);
-
-    return NextResponse.json({
-      message: "Product stored successfully",
-      result,
+    await db.collection(COLLECTION_NAME).insertOne({
+      title,
+      description,
+      category,
+      videoPath,
     });
+    return res.status(201).json({ message: "Video uploaded successfully" });
   } catch (error) {
-    console.error("Error storing product:", error);
-    return NextResponse.json(
-      { error: "Failed to store product" },
-      { status: 500 }
-    );
+    console.error("Database error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
+
+  return NextResponse.json({ message: "Video uploaded successfully" });
 }
