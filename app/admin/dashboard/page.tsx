@@ -9,13 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 
 export default function AdminDashboard() {
-  const [videoData, setVideoData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    videoPath: "",
-    thumbnailPath: "",
-  });
   const router = useRouter();
 
   useEffect(() => {
@@ -24,52 +17,6 @@ export default function AdminDashboard() {
       router.push("/admin/login");
     }
   }, [router]);
-
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setVideoData((prevData) => ({
-      ...prevData,
-      [id]: value,
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const { id } = e.target;
-    const file = e.target.files[0];
-    if (file) {
-      setVideoData((prevData) => ({
-        ...prevData,
-        [id]: file.name, // Store the file name for now; in a real app, you'd upload the file and store its URL
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/storeproduct", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(setVideoData),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        alert("Video uploaded successfully!");
-        setVideoData({
-          title: "",
-          description: "",
-          category: "",
-          videoPath: "",
-        });
-      } else {
-        alert(`Error: ${result.error || "Failed to upload video"}`);
-      }
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      alert("An error occurred while uploading the video.");
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
